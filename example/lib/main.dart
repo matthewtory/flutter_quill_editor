@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill_editor/flutter_quill_editor.dart';
 
 void main() {
   runApp(MyApp());
