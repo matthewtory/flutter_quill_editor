@@ -1,0 +1,49 @@
+<div id="wrapper" style="height: 100%; display: flex; flex-direction: column;">
+    <div id="editor" style="flex: 1; overflow-y: auto;">
+        {initialText}
+    </div>
+</div>
+
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .ql-container {
+        z-index: 0;
+        border: none !important;
+    }
+</style>
+
+<script>
+    const kFlutterMessageTypeLink = 'link';
+    const kFlutterMessageTypeTextChange = 'text_change';
+
+    const sendFlutterMessage = function (type, payload) {
+        Flutter.postMessage(JSON.stringify({
+            type,
+            payload
+        }))
+    }
+
+    const quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: {
+                handlers: {
+                    'link': function (_) {
+                        const selection = quill.getSelection();
+
+                        sendFlutterMessage(kFlutterMessageTypeLink, selection)
+                    }
+                }
+            }
+        }
+    });
+    quill.on('text-change', function (delta, source) {
+        sendFlutterMessage(kFlutterMessageTypeTextChange, {text: quill.root.innerHTML})
+    });
+</script>
