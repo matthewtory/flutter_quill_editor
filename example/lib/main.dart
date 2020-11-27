@@ -30,7 +30,7 @@ class _MyAppState extends State<MyApp> {
         body: QuillEditor(
           controller: _controller,
           css:
-              '.ql-container {font-family: Raleway,Helvetica, Arial, sans-serif; letter-spacing: -0.07px;  font-size: 14px; }'
+              '.ql-container {font-family: Raleway,Helvetica, Arial, sans-serif; letter-spacing: -0.07px; }'
               'a {word-break: break-all; color: rgb(225, 45, 114) !important}'
               'a span {color: rgb(225, 45, 114) !important}'
               'h1 { font-weight: 700; letter-spacing: -0.14px; color: #3e1368}'
@@ -41,6 +41,7 @@ class _MyAppState extends State<MyApp> {
               '<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:400,700">',
           onOpenUrl: (url) => print('tried to open $url'),
           color: Colors.green.shade700,
+          fontSize: 16,
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _controller.value = '<h1>hello</h1>',

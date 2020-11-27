@@ -46,16 +46,18 @@ class QuillEditor extends StatefulWidget {
   final String header;
   final QuillEditorOpenUrlCallback onOpenUrl;
   final Color color;
+  final int fontSize;
 
-  QuillEditor({
-    Key key,
-    this.controller,
-    this.css,
-    this.header,
-    this.onOpenUrl,
-    this.color,
-    this.onReady
-  }) : super(key: key);
+  QuillEditor(
+      {Key key,
+      this.controller,
+      this.css,
+      this.header,
+      this.onOpenUrl,
+      this.color,
+      this.onReady,
+      this.fontSize})
+      : super(key: key);
 
   @override
   _QuillEditorState createState() => _QuillEditorState();
@@ -118,6 +120,9 @@ class _QuillEditorState extends State<QuillEditor> {
     if (oldWidget.color != widget.color) {
       refreshEditor = true;
     }
+    if (oldWidget.fontSize != widget.fontSize) {
+      refreshEditor = true;
+    }
 
     if (refreshEditor) {
       _webViewControllerCompleter.future.then((controller) async {
@@ -152,7 +157,7 @@ class _QuillEditorState extends State<QuillEditor> {
       onWebViewCreated: (webViewController) {
         if (!_webViewControllerCompleter.isCompleted) {
           _webViewControllerCompleter.complete(webViewController);
-          if(widget.onReady != null) {
+          if (widget.onReady != null) {
             widget.onReady();
           }
         }
@@ -219,6 +224,7 @@ class _QuillEditorState extends State<QuillEditor> {
         '<head>'
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">'
         '<style>$css</style>'
+        '<style>.ql-container { ${widget.fontSize != null ? 'font-size: ${widget.fontSize}px' : ''} } </style>'
         '${widget.header ?? ''}'
         '<style>${widget.css ?? ''}</style>'
         '<script>$js</script>'
