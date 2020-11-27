@@ -41,6 +41,7 @@ class QuillEditor extends StatefulWidget {
   }
 
   final QuillEditorController controller;
+  final VoidCallback onReady;
   final String css;
   final String header;
   final QuillEditorOpenUrlCallback onOpenUrl;
@@ -53,6 +54,7 @@ class QuillEditor extends StatefulWidget {
     this.header,
     this.onOpenUrl,
     this.color,
+    this.onReady
   }) : super(key: key);
 
   @override
@@ -129,29 +131,18 @@ class _QuillEditorState extends State<QuillEditor> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: _loadUrl(context),
-      builder: (context, snapshot) {
-        Widget child;
+        future: _loadUrl(context),
+        builder: (context, snapshot) {
+          Widget child;
 
-        if (snapshot.hasData) {
-          child = _buildWebView(context, snapshot.data);
-        } else {
-          child = SizedBox.shrink();
-        }
+          if (snapshot.hasData) {
+            child = _buildWebView(context, snapshot.data);
+          } else {
+            child = SizedBox.shrink();
+          }
 
-        return AnimatedSwitcher(
-          duration: Duration(milliseconds: 250),
-          layoutBuilder: (currentChild, previousChildren) => Stack(
-            children: <Widget>[
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
-            alignment: Alignment.topCenter,
-          ),
-          child: child,
-        );
-      },
-    );
+          return child;
+        });
   }
 
   Widget _buildWebView(BuildContext context, String url) {
@@ -161,6 +152,9 @@ class _QuillEditorState extends State<QuillEditor> {
       onWebViewCreated: (webViewController) {
         if (!_webViewControllerCompleter.isCompleted) {
           _webViewControllerCompleter.complete(webViewController);
+          if(widget.onReady != null) {
+            widget.onReady();
+          }
         }
       },
       navigationDelegate: (nav) {
@@ -203,7 +197,6 @@ class _QuillEditorState extends State<QuillEditor> {
       ]),
     );
   }
-
 
   Future<String> _loadUrl(
     BuildContext context,
