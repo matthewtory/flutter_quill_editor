@@ -9,8 +9,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'link_dialog.dart';
 import 'constants.dart';
 
-typedef Future<void> QuillEditorMessageHandler(
-    BuildContext context, WebViewController webViewController, dynamic payload);
+typedef Future<void> QuillEditorMessageHandler(BuildContext context,
+    WebViewController webViewController, dynamic payload);
+typedef void QuillEditorOpenUrlCallback(String url);
 
 class QuillEditorController extends ValueNotifier<String> {
   final String initialText;
@@ -24,8 +25,17 @@ class QuillEditor extends StatefulWidget {
   final QuillEditorController controller;
   final String css;
   final String header;
+  final QuillEditorOpenUrlCallback onOpenUrl;
+  final Color color;
 
-  QuillEditor({Key key, this.controller, this.css, this.header}) : super(key: key);
+  QuillEditor({
+    Key key,
+    this.controller,
+    this.css,
+    this.header,
+    this.onOpenUrl,
+    this.color,
+  }) : super(key: key);
 
   @override
   _QuillEditorState createState() => _QuillEditorState();
@@ -35,7 +45,7 @@ class _QuillEditorState extends State<QuillEditor> {
   Map<String, QuillEditorMessageHandler> _messageHandlers = {
     'link': (context, controller, payload) async {
       String url =
-          await showDialog(context: context, builder: (_) => QuillLinkDialog());
+      await showDialog(context: context, builder: (_) => QuillLinkDialog());
 
       if (url != null) {
         Map<String, dynamic> data = payload as Map<String, dynamic>;
@@ -60,9 +70,10 @@ class _QuillEditorState extends State<QuillEditor> {
   };
 
   Completer<WebViewController> _webViewControllerCompleter =
-      Completer<WebViewController>();
+  Completer<WebViewController>();
 
   String _localValue;
+  bool _didLoadHtml = false;
 
   @override
   void initState() {
@@ -80,11 +91,20 @@ class _QuillEditorState extends State<QuillEditor> {
       widget.controller?.addListener(_controllerChangedValue);
     }
 
+    bool refreshEditor = false;
     if (oldWidget.css != widget.css) {
-      print('css');
+      refreshEditor = true;
+    }
+    if (oldWidget.color != widget.color) {
+      refreshEditor = true;
+    }
 
-      _webViewControllerCompleter.future.then(
-          (controller) async => controller.loadUrl(await _loadUrl(context)));
+    if (refreshEditor) {
+      _webViewControllerCompleter.future.then((controller) async {
+        String url = await _loadUrl(context);
+        _didLoadHtml = false;
+        controller.loadUrl(url);
+      });
     }
   }
 
@@ -103,13 +123,14 @@ class _QuillEditorState extends State<QuillEditor> {
 
         return AnimatedSwitcher(
           duration: Duration(milliseconds: 250),
-          layoutBuilder: (currentChild, previousChildren) => Stack(
-            children: <Widget>[
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
-            alignment: Alignment.topCenter,
-          ),
+          layoutBuilder: (currentChild, previousChildren) =>
+              Stack(
+                children: <Widget>[
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+                alignment: Alignment.topCenter,
+              ),
           child: child,
         );
       },
@@ -125,13 +146,26 @@ class _QuillEditorState extends State<QuillEditor> {
           _webViewControllerCompleter.complete(webViewController);
         }
       },
+      navigationDelegate: (nav) {
+        if (!_didLoadHtml) {
+          _didLoadHtml = true;
+
+          return NavigationDecision.navigate;
+        }
+
+        if (widget.onOpenUrl != null) {
+          widget.onOpenUrl(nav.url);
+        }
+
+        return NavigationDecision.prevent;
+      },
       javascriptChannels: Set.from([
         JavascriptChannel(
             name: 'Flutter',
             onMessageReceived: (JavascriptMessage message) async {
               Map<String, dynamic> data = jsonDecode(message.message);
               WebViewController controller =
-                  await _webViewControllerCompleter.future;
+              await _webViewControllerCompleter.future;
 
               dynamic type = data['type'];
               if (type is String) {
@@ -153,9 +187,7 @@ class _QuillEditorState extends State<QuillEditor> {
     );
   }
 
-  Future<String> _loadUrl(
-    BuildContext context,
-  ) async {
+  Future<String> _loadUrl(BuildContext context,) async {
     List<String> files = await Future.wait([
       rootBundle.loadString(kAssetEditorHtml),
       rootBundle.loadString(kAssetQuillJs),
@@ -165,6 +197,12 @@ class _QuillEditorState extends State<QuillEditor> {
     String html = files[0];
     String js = files[1];
     String css = files[2];
+
+    if (widget.color != null) {
+      css = css.replaceAll('#06c',
+          'rgba(${widget.color.red}, ${widget.color.green},${widget.color
+              .blue}, ${widget.color.alpha})');
+    }
 
     html = html.replaceAll(
         '{initialText}', _localValue ?? widget.controller?.initialText ?? '');

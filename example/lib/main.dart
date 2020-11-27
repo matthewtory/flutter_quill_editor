@@ -39,6 +39,8 @@ class _MyAppState extends State<MyApp> {
               'h4 { font-weight: 700; letter-spacing: -0.14px; color: #3e1368}',
           header:
               '<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:400,700">',
+          onOpenUrl: (url) => print('tried to open $url'),
+          color: Colors.green.shade700,
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _controller.value = '<h1>hello</h1>',
