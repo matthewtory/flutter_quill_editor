@@ -37,10 +37,10 @@ class _QuillLinkDialogState extends State<QuillLinkDialog> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            FlatButton(
+            TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text('Cancel')),
-            FlatButton(
+            TextButton(
               child: Text('Add'),
               onPressed: () {
                 Uri uri = Uri.tryParse(_urlController.text);
